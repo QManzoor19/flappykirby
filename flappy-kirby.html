@@ -741,6 +741,7 @@ function update() {
     pipe.x -= pipeSpeed;
     if (!pipe.scored && pipe.x + pipeWidth < kirby.x) {
       pipe.scored = true; score++;
+      if (score > highScore) { highScore = score; localStorage.setItem('flappyKirbyHigh', highScore.toString()); newHighScore = true; }
       for (let i = 0; i < 8; i++) {
         const a = (Math.PI * 2 * i) / 8;
         particles.push({ x: kirby.x, y: kirby.y, vx: Math.cos(a) * 3, vy: Math.sin(a) * 3, life: 1, size: 3, color: PIPE_COLOR });
