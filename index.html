@@ -43,8 +43,23 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
 // Responsive sizing for iPhone / mobile
+// Safe area insets for iPhone notch/dynamic island
+let safeTop = 0, safeBottom = 0;
+function updateSafeAreas() {
+  const style = getComputedStyle(document.documentElement);
+  safeTop = parseInt(style.getPropertyValue('env(safe-area-inset-top)')) || 0;
+  safeBottom = parseInt(style.getPropertyValue('env(safe-area-inset-bottom)')) || 0;
+  if (safeTop === 0 && window.innerHeight / window.innerWidth > 2) {
+    safeTop = 50;
+    safeBottom = 34;
+  }
+}
+updateSafeAreas();
+
+let W = window.innerWidth, H = window.innerHeight;
+let groundY = H - 60 - safeBottom;
+
 function getViewportSize() {
-  // visualViewport is most accurate on mobile Safari
   if (window.visualViewport) {
     return { w: window.visualViewport.width, h: window.visualViewport.height };
   }
@@ -63,26 +78,11 @@ function resizeCanvas() {
   groundY = H - 60 - safeBottom;
 }
 
-let W = window.innerWidth, H = window.innerHeight;
 resizeCanvas();
 window.addEventListener('resize', () => { updateSafeAreas(); resizeCanvas(); });
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', () => { updateSafeAreas(); resizeCanvas(); });
 }
-
-// Safe area insets for iPhone notch/dynamic island
-let safeTop = 0, safeBottom = 0;
-function updateSafeAreas() {
-  const style = getComputedStyle(document.documentElement);
-  safeTop = parseInt(style.getPropertyValue('env(safe-area-inset-top)')) || 0;
-  safeBottom = parseInt(style.getPropertyValue('env(safe-area-inset-bottom)')) || 0;
-  // Fallback: detect iPhone-like aspect ratios
-  if (safeTop === 0 && window.innerHeight / window.innerWidth > 2) {
-    safeTop = 50;
-    safeBottom = 34;
-  }
-}
-updateSafeAreas();
 
 // Background music
 const bgMusic = new Audio('music.mp3');
@@ -214,9 +214,6 @@ const pipeInterval = 90;
 
 // Particles
 let particles = [];
-
-// Ground - account for bottom safe area
-let groundY = H - 60 - safeBottom;
 
 // Background scroll
 let bgScrollX = 0;
