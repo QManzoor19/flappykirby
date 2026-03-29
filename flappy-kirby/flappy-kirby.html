@@ -149,6 +149,19 @@ function toggleMute() {
   bgMusic.muted = musicMuted;
 }
 
+// Pause music when leaving the page, resume when coming back
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    bgMusic.pause();
+  } else if (musicStarted && !musicMuted) {
+    bgMusic.play().catch(() => {});
+  }
+});
+window.addEventListener('blur', () => { bgMusic.pause(); });
+window.addEventListener('focus', () => {
+  if (musicStarted && !musicMuted) bgMusic.play().catch(() => {});
+});
+
 // Load background image
 const bgImg = new Image();
 bgImg.src = 'bg.png';
