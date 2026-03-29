@@ -96,6 +96,7 @@ let score = 0;
 let highScore = parseInt(localStorage.getItem('flappyKirbyHigh') || '0');
 let frameCount = 0;
 let newHighScore = false;
+let deathTime = 0;
 
 // Kirby
 const kirby = {
@@ -140,7 +141,7 @@ function jump() {
         vy: Math.random() * 2 + 1, life: 1, size: Math.random() * 4 + 2, color: '#FFD6E8' });
     }
   } else if (gameState === 'gameover') {
-    gameState = 'menu';
+    if (Date.now() - deathTime > 1500) gameState = 'menu';
   }
 }
 
@@ -770,6 +771,7 @@ function update() {
 
 function die() {
   gameState = 'gameover';
+  deathTime = Date.now();
   newHighScore = score > highScore;
   if (newHighScore) { highScore = score; localStorage.setItem('flappyKirbyHigh', highScore.toString()); }
 }
