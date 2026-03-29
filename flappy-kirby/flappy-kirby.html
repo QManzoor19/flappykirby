@@ -15,29 +15,24 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
-    background: #1a1a2e;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    font-family: 'Segoe UI', -apple-system, sans-serif;
+    background: #000;
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
     overflow: hidden;
     touch-action: none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
     position: fixed;
-    top: 0; left: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
   }
   canvas {
     cursor: pointer;
-    width: 100vw !important;
-    height: 100vh !important;
-    height: 100dvh !important;
     display: block;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    position: fixed;
+    top: 0; left: 0;
+    width: 100% !important;
+    height: 100% !important;
   }
 </style>
 </head>
@@ -48,22 +43,39 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
 // Responsive sizing for iPhone / mobile
+function getScreenSize() {
+  // Use the largest available dimensions to ensure full coverage
+  const w = Math.max(window.innerWidth, document.documentElement.clientWidth, screen.width);
+  const h = Math.max(window.innerHeight, document.documentElement.clientHeight, screen.height);
+  return { w, h };
+}
+
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
-  const winW = window.innerWidth, winH = window.innerHeight;
-  canvas.width = winW * dpr;
-  canvas.height = winH * dpr;
-  canvas.style.width = winW + 'px';
-  canvas.style.height = winH + 'px';
+  const { w, h } = getScreenSize();
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
-let W = window.innerWidth, H = window.innerHeight;
+
+let { w: W, h: H } = getScreenSize();
 resizeCanvas();
 window.addEventListener('resize', () => {
-  W = window.innerWidth; H = window.innerHeight;
+  const s = getScreenSize();
+  W = s.w; H = s.h;
   groundY = H - 60 - safeBottom;
   updateSafeAreas();
   resizeCanvas();
+});
+// Also recalc on orientation change (iOS sometimes delays resize)
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    const s = getScreenSize();
+    W = s.w; H = s.h;
+    groundY = H - 60 - safeBottom;
+    updateSafeAreas();
+    resizeCanvas();
+  }, 200);
 });
 
 // Safe area insets for iPhone notch/dynamic island
@@ -276,22 +288,18 @@ function drawBackground() {
     ctx.fillRect(0, 0, W, H);
     return;
   }
-  // Scale to cover the full screen (fill both width and height)
-  const scaleX = W / bgImg.width;
-  const scaleY = H / bgImg.height;
-  const scale = Math.max(scaleX, scaleY);
-  const bgW = bgImg.width * scale;
-  const bgH = bgImg.height * scale;
-  const yOff = (H - bgH) / 2; // center vertically if taller
+  // Scale to fully cover screen - no gaps
+  const bgH = H;
+  const bgW = bgImg.width * (H / bgImg.height);
 
   // Tile horizontally for seamless scroll
   const x1 = -(bgScrollX % bgW);
-  ctx.drawImage(bgImg, x1, yOff, bgW, bgH);
-  if (x1 + bgW < W) {
-    ctx.drawImage(bgImg, x1 + bgW, yOff, bgW, bgH);
+  // Draw enough tiles to cover full width
+  for (let x = x1; x < W; x += bgW) {
+    ctx.drawImage(bgImg, x, 0, bgW, bgH);
   }
   if (x1 > 0) {
-    ctx.drawImage(bgImg, x1 - bgW, yOff, bgW, bgH);
+    ctx.drawImage(bgImg, x1 - bgW, 0, bgW, bgH);
   }
 }
 
