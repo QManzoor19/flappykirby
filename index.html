@@ -15,7 +15,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
-    background: #000;
+    background: #B8D6E4;
     margin: 0; padding: 0;
     width: 100%; height: 100%;
     overflow: hidden;
@@ -296,26 +296,34 @@ function spawnPipe() {
 // ========================
 
 function drawBackground() {
-  if (!bgReady) {
-    ctx.fillStyle = '#A0D8F0';
-    ctx.fillRect(0, 0, W, H);
-    return;
-  }
-  // Scale to cover full screen - use the larger scale so no gaps anywhere
-  const scaleW = W / bgImg.width;
-  const scaleH = H / bgImg.height;
-  const scale = Math.max(scaleW, scaleH);
-  const bgW = bgImg.width * scale;
-  const bgH = bgImg.height * scale;
-  const yOff = H - bgH; // pin bottom of image to bottom of screen
+  // Fill entire screen with matching colors first so no black gaps
+  const grd = ctx.createLinearGradient(0, 0, 0, H);
+  grd.addColorStop(0, '#79BDC0');
+  grd.addColorStop(1, '#B8D6E4');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, W, H);
+
+  if (!bgReady) return;
+
+  // Scale width to fit screen width, let it tile/stretch
+  const bgW = W;
+  const bgH = bgImg.height * (W / bgImg.width);
+
+  // Tile vertically if needed, pin to bottom
+  const yOff = H - bgH;
 
   // Tile horizontally for seamless scroll
-  const x1 = -(bgScrollX % bgW);
-  for (let x = x1; x < W; x += bgW) {
-    ctx.drawImage(bgImg, x, yOff, bgW, bgH);
+  const scrollW = bgImg.width * (H / bgImg.height);
+  const scale = Math.max(W / bgImg.width, H / bgImg.height);
+  const drawW = bgImg.width * scale;
+  const drawH = bgImg.height * scale;
+
+  const x1 = -(bgScrollX % drawW);
+  for (let x = x1; x < W; x += drawW) {
+    ctx.drawImage(bgImg, x, H - drawH, drawW, drawH);
   }
   if (x1 > 0) {
-    ctx.drawImage(bgImg, x1 - bgW, yOff, bgW, bgH);
+    ctx.drawImage(bgImg, x1 - drawW, H - drawH, drawW, drawH);
   }
 }
 
