@@ -203,9 +203,44 @@ function jump() {
   }
 }
 
-// Touch + click + keyboard
-canvas.addEventListener('click', jump);
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); }, { passive: false });
+// Touch + click + keyboard - with mute button detection
+let muteTapped = false;
+
+function isMuteArea(x, y) {
+  return x < 65 && y < safeTop + 60;
+}
+
+function handleInput(e) {
+  let x, y;
+  if (e.touches) {
+    const rect = canvas.getBoundingClientRect();
+    x = e.touches[0].clientX - rect.left;
+    y = e.touches[0].clientY - rect.top;
+  } else {
+    const rect = canvas.getBoundingClientRect();
+    x = e.clientX - rect.left;
+    y = e.clientY - rect.top;
+  }
+
+  if (isMuteArea(x, y)) {
+    toggleMute();
+    muteTapped = true;
+    return;
+  }
+  jump();
+}
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  muteTapped = false;
+  handleInput(e);
+}, { passive: false });
+
+canvas.addEventListener('click', (e) => {
+  if (muteTapped) { muteTapped = false; return; }
+  handleInput(e);
+});
+
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); jump(); }
 });
@@ -225,18 +260,22 @@ function drawBackground() {
     ctx.fillRect(0, 0, W, H);
     return;
   }
-  // Draw bg image scaled to fill canvas height, scrolling horizontally
-  const scale = H / bgImg.height;
+  // Scale to cover the full screen (fill both width and height)
+  const scaleX = W / bgImg.width;
+  const scaleY = H / bgImg.height;
+  const scale = Math.max(scaleX, scaleY);
   const bgW = bgImg.width * scale;
+  const bgH = bgImg.height * scale;
+  const yOff = (H - bgH) / 2; // center vertically if taller
 
   // Tile horizontally for seamless scroll
   const x1 = -(bgScrollX % bgW);
-  ctx.drawImage(bgImg, x1, 0, bgW, H);
+  ctx.drawImage(bgImg, x1, yOff, bgW, bgH);
   if (x1 + bgW < W) {
-    ctx.drawImage(bgImg, x1 + bgW, 0, bgW, H);
+    ctx.drawImage(bgImg, x1 + bgW, yOff, bgW, bgH);
   }
   if (x1 > 0) {
-    ctx.drawImage(bgImg, x1 - bgW, 0, bgW, H);
+    ctx.drawImage(bgImg, x1 - bgW, yOff, bgW, bgH);
   }
 }
 
@@ -629,21 +668,6 @@ function drawMuteBtn() {
   ctx.restore();
 }
 
-// Mute button click detection - account for safe area
-canvas.addEventListener('click', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = (e.clientX - rect.left);
-  const y = (e.clientY - rect.top);
-  if (x < 60 && y < safeTop + 55) { toggleMute(); e.stopPropagation(); }
-}, true);
-
-canvas.addEventListener('touchstart', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const t = e.touches[0];
-  const x = (t.clientX - rect.left);
-  const y = (t.clientY - rect.top);
-  if (x < 60 && y < safeTop + 55) { toggleMute(); e.stopPropagation(); }
-}, { capture: true });
 
 function drawHighScore() {
   if (highScore <= 0) return;
