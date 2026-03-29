@@ -43,40 +43,32 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
 // Responsive sizing for iPhone / mobile
-function getScreenSize() {
-  // Use the largest available dimensions to ensure full coverage
-  const w = Math.max(window.innerWidth, document.documentElement.clientWidth, screen.width);
-  const h = Math.max(window.innerHeight, document.documentElement.clientHeight, screen.height);
-  return { w, h };
+function getViewportSize() {
+  // visualViewport is most accurate on mobile Safari
+  if (window.visualViewport) {
+    return { w: window.visualViewport.width, h: window.visualViewport.height };
+  }
+  return { w: window.innerWidth, h: window.innerHeight };
 }
 
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
-  const { w, h } = getScreenSize();
+  const { w, h } = getViewportSize();
+  W = w; H = h;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  groundY = H - 60 - safeBottom;
 }
 
-let { w: W, h: H } = getScreenSize();
+let W = window.innerWidth, H = window.innerHeight;
 resizeCanvas();
-window.addEventListener('resize', () => {
-  const s = getScreenSize();
-  W = s.w; H = s.h;
-  groundY = H - 60 - safeBottom;
-  updateSafeAreas();
-  resizeCanvas();
-});
-// Also recalc on orientation change (iOS sometimes delays resize)
-window.addEventListener('orientationchange', () => {
-  setTimeout(() => {
-    const s = getScreenSize();
-    W = s.w; H = s.h;
-    groundY = H - 60 - safeBottom;
-    updateSafeAreas();
-    resizeCanvas();
-  }, 200);
-});
+window.addEventListener('resize', () => { updateSafeAreas(); resizeCanvas(); });
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => { updateSafeAreas(); resizeCanvas(); });
+}
 
 // Safe area insets for iPhone notch/dynamic island
 let safeTop = 0, safeBottom = 0;
