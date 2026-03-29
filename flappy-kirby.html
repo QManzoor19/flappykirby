@@ -36,6 +36,8 @@
     height: 100vh !important;
     height: 100dvh !important;
     display: block;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 </style>
 </head>
@@ -59,9 +61,24 @@ let W = window.innerWidth, H = window.innerHeight;
 resizeCanvas();
 window.addEventListener('resize', () => {
   W = window.innerWidth; H = window.innerHeight;
-  groundY = H - 60;
+  groundY = H - 60 - safeBottom;
+  updateSafeAreas();
   resizeCanvas();
 });
+
+// Safe area insets for iPhone notch/dynamic island
+let safeTop = 0, safeBottom = 0;
+function updateSafeAreas() {
+  const style = getComputedStyle(document.documentElement);
+  safeTop = parseInt(style.getPropertyValue('env(safe-area-inset-top)')) || 0;
+  safeBottom = parseInt(style.getPropertyValue('env(safe-area-inset-bottom)')) || 0;
+  // Fallback: detect iPhone-like aspect ratios
+  if (safeTop === 0 && window.innerHeight / window.innerWidth > 2) {
+    safeTop = 50;
+    safeBottom = 34;
+  }
+}
+updateSafeAreas();
 
 // Background music
 const bgMusic = new Audio('music.mp3');
@@ -69,6 +86,25 @@ bgMusic.loop = true;
 bgMusic.volume = 0.4;
 let musicStarted = false;
 let musicMuted = false;
+
+// Jump sound using Web Audio API
+let audioCtx = null;
+function playJumpSound() {
+  if (musicMuted) return;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(580, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
+  osc.frequency.exponentialRampToValueAtTime(660, audioCtx.currentTime + 0.15);
+  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.18);
+}
 
 function startMusic() {
   if (!musicStarted) {
@@ -135,8 +171,8 @@ const pipeInterval = 90;
 // Particles
 let particles = [];
 
-// Ground
-let groundY = H - 60;
+// Ground - account for bottom safe area
+let groundY = H - 60 - safeBottom;
 
 // Background scroll
 let bgScrollX = 0;
@@ -154,8 +190,10 @@ function jump() {
   if (gameState === 'menu') {
     gameState = 'playing'; reset();
     kirby.velocity = kirby.jumpForce; kirby.flapTimer = 12;
+    playJumpSound();
   } else if (gameState === 'playing') {
     kirby.velocity = kirby.jumpForce; kirby.flapTimer = 12;
+    playJumpSound();
     for (let i = 0; i < 5; i++) {
       particles.push({ x: kirby.x, y: kirby.y + 15, vx: (Math.random() - 0.5) * 3,
         vy: Math.random() * 2 + 1, life: 1, size: Math.random() * 4 + 2, color: '#FFD6E8' });
@@ -575,27 +613,28 @@ function drawScore() {
   const startX = W / 2 - totalW / 2 + spacing / 2;
 
   for (let i = 0; i < str.length; i++) {
-    drawDigit(startX + i * spacing, 55, str[i], digitSize);
+    drawDigit(startX + i * spacing, safeTop + 55, str[i], digitSize);
   }
 }
 
 function drawMuteBtn() {
+  const btnY = safeTop + 14;
   ctx.save();
-  ctx.globalAlpha = 0.6;
+  ctx.globalAlpha = 0.7;
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = '24px sans-serif';
+  ctx.font = '28px sans-serif';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  ctx.fillText(musicMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A', 16, 16);
+  ctx.fillText(musicMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A', 16, btnY);
   ctx.restore();
 }
 
-// Mute button click detection
+// Mute button click detection - account for safe area
 canvas.addEventListener('click', (e) => {
   const rect = canvas.getBoundingClientRect();
   const x = (e.clientX - rect.left);
   const y = (e.clientY - rect.top);
-  if (x < 50 && y < 50) { toggleMute(); e.stopPropagation(); }
+  if (x < 60 && y < safeTop + 55) { toggleMute(); e.stopPropagation(); }
 }, true);
 
 canvas.addEventListener('touchstart', (e) => {
@@ -603,7 +642,7 @@ canvas.addEventListener('touchstart', (e) => {
   const t = e.touches[0];
   const x = (t.clientX - rect.left);
   const y = (t.clientY - rect.top);
-  if (x < 50 && y < 50) { toggleMute(); e.stopPropagation(); }
+  if (x < 60 && y < safeTop + 55) { toggleMute(); e.stopPropagation(); }
 }, { capture: true });
 
 function drawHighScore() {
@@ -616,8 +655,9 @@ function drawHighScore() {
   ctx.textBaseline = 'top';
   ctx.strokeStyle = 'rgba(0,0,0,0.18)';
   ctx.lineWidth = 2;
-  ctx.strokeText(`\u2605 ${highScore}`, W - 18, 18);
-  ctx.fillText(`\u2605 ${highScore}`, W - 18, 18);
+  const hsY = safeTop + 16;
+  ctx.strokeText(`\u2605 ${highScore}`, W - 18, hsY);
+  ctx.fillText(`\u2605 ${highScore}`, W - 18, hsY);
   ctx.restore();
 }
 
