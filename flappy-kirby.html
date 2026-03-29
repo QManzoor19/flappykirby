@@ -639,29 +639,32 @@ function drawParticles() {
 function drawMenu() {
   drawBackground();
 
-  kirby.y = 280 + Math.sin(frameCount * 0.04) * 20;
-  kirby.velocity = -1; kirby.flapTimer = 0;
-  drawKirby();
-
-  // Title - retro pixel font
+  // Title - retro pixel font, centered on screen
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = '26px "Press Start 2P", monospace';
+  ctx.font = '38px "Press Start 2P", monospace';
+
+  const titleY = H / 2 - 40;
 
   // White outline
-  ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 4;
-  ctx.strokeText('FLAPPY', W / 2, 105);
-  ctx.strokeText('KIRBY', W / 2, 140);
+  ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 5;
+  ctx.strokeText('FLAPPY', W / 2, titleY);
+  ctx.strokeText('KIRBY', W / 2, titleY + 55);
 
   // Pink fill
   ctx.fillStyle = '#E84393';
-  ctx.fillText('FLAPPY', W / 2, 105);
-  ctx.fillText('KIRBY', W / 2, 140);
+  ctx.fillText('FLAPPY', W / 2, titleY);
+  ctx.fillText('KIRBY', W / 2, titleY + 55);
+
+  // Kirby floating below title
+  kirby.y = titleY + 140 + Math.sin(frameCount * 0.04) * 20;
+  kirby.velocity = -1; kirby.flapTimer = 0;
+  drawKirby();
 
   // Tap to play
   ctx.globalAlpha = 0.7 + Math.sin(frameCount * 0.06) * 0.3;
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = '700 18px "Nunito", "Helvetica Neue", -apple-system, sans-serif';
-  ctx.fillText('Tap or Press Space', W / 2, 440);
+  ctx.font = '700 20px "Nunito", "Helvetica Neue", -apple-system, sans-serif';
+  ctx.fillText('Tap or Press Space', W / 2, titleY + 220);
   ctx.globalAlpha = 1;
 
 }
