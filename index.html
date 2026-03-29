@@ -296,35 +296,13 @@ function spawnPipe() {
 // ========================
 
 function drawBackground() {
-  // Fill entire screen with matching colors first so no black gaps
-  const grd = ctx.createLinearGradient(0, 0, 0, H);
-  grd.addColorStop(0, '#79BDC0');
-  grd.addColorStop(1, '#B8D6E4');
-  ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, W, H);
-
-  if (!bgReady) return;
-
-  // Scale width to fit screen width, let it tile/stretch
-  const bgW = W;
-  const bgH = bgImg.height * (W / bgImg.width);
-
-  // Tile vertically if needed, pin to bottom
-  const yOff = H - bgH;
-
-  // Tile horizontally for seamless scroll
-  const scrollW = bgImg.width * (H / bgImg.height);
-  const scale = Math.max(W / bgImg.width, H / bgImg.height);
-  const drawW = bgImg.width * scale;
-  const drawH = bgImg.height * scale;
-
-  const x1 = -(bgScrollX % drawW);
-  for (let x = x1; x < W; x += drawW) {
-    ctx.drawImage(bgImg, x, H - drawH, drawW, drawH);
+  if (!bgReady) {
+    ctx.fillStyle = '#A0D8F0';
+    ctx.fillRect(0, 0, W, H);
+    return;
   }
-  if (x1 > 0) {
-    ctx.drawImage(bgImg, x1 - drawW, H - drawH, drawW, drawH);
-  }
+  // Just stretch the image to fill the entire screen
+  ctx.drawImage(bgImg, 0, 0, W, H);
 }
 
 function drawSky_UNUSED() {
