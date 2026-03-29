@@ -100,7 +100,7 @@ let deathTime = 0;
 
 // Kirby
 const kirby = {
-  x: 80, y: 300, radius: 22,
+  x: W / 2, y: 300, radius: 22,
   velocity: 0, gravity: 0.45, jumpForce: -7.5,
   rotation: 0, flapTimer: 0
 };
@@ -125,7 +125,7 @@ let bgScrollX = 0;
 const PIPE_COLOR = '#FFD700';
 
 function reset() {
-  kirby.y = 300; kirby.velocity = 0; kirby.rotation = 0; kirby.flapTimer = 0;
+  kirby.x = W / 2; kirby.y = 300; kirby.velocity = 0; kirby.rotation = 0; kirby.flapTimer = 0;
   pipes = []; particles = []; pipeTimer = 0; score = 0; frameCount = 0;
   newHighScore = false;
 }
@@ -557,21 +557,21 @@ function drawScore() {
   for (let i = 0; i < str.length; i++) {
     drawDigit(startX + i * spacing, 55, str[i], digitSize);
   }
+}
 
-  // Small high score under score during gameplay
-  if (highScore > 0 && gameState === 'playing') {
-    ctx.save();
-    ctx.globalAlpha = 0.5;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '700 14px "Nunito", "Helvetica Neue", -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // Star icon
-    const hx = W / 2, hy = 82;
-    ctx.fillText(`\u2605 ${highScore}`, hx, hy);
-    ctx.restore();
-  }
+function drawHighScore() {
+  if (highScore <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = 0.7;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '800 16px "Nunito", "Helvetica Neue", -apple-system, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'top';
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeText(`\u2605 ${highScore}`, W - 16, 16);
+  ctx.fillText(`\u2605 ${highScore}`, W - 16, 16);
+  ctx.restore();
 }
 
 // ========================
@@ -664,12 +664,6 @@ function drawMenu() {
   ctx.fillText('Tap or Press Space', W / 2, 440);
   ctx.globalAlpha = 1;
 
-  // High score on menu
-  if (highScore > 0) {
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.font = '800 16px "Nunito", "Helvetica Neue", -apple-system, sans-serif';
-    ctx.fillText(`\u2605 Best: ${highScore}`, W / 2, 475);
-  }
 }
 
 function drawGameOver() {
@@ -785,6 +779,7 @@ function draw() {
     drawParticles(); drawKirby(); drawScore();
     if (gameState === 'gameover') drawGameOver();
   }
+  drawHighScore();
 }
 
 function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
