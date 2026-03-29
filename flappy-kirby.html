@@ -63,6 +63,25 @@ window.addEventListener('resize', () => {
   resizeCanvas();
 });
 
+// Background music
+const bgMusic = new Audio('music.mp3');
+bgMusic.loop = true;
+bgMusic.volume = 0.4;
+let musicStarted = false;
+let musicMuted = false;
+
+function startMusic() {
+  if (!musicStarted) {
+    bgMusic.play().catch(() => {});
+    musicStarted = true;
+  }
+}
+
+function toggleMute() {
+  musicMuted = !musicMuted;
+  bgMusic.muted = musicMuted;
+}
+
 // Load background image
 const bgImg = new Image();
 bgImg.src = 'bg.png';
@@ -131,6 +150,7 @@ function reset() {
 }
 
 function jump() {
+  startMusic();
   if (gameState === 'menu') {
     gameState = 'playing'; reset();
     kirby.velocity = kirby.jumpForce; kirby.flapTimer = 12;
@@ -559,6 +579,33 @@ function drawScore() {
   }
 }
 
+function drawMuteBtn() {
+  ctx.save();
+  ctx.globalAlpha = 0.6;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '24px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(musicMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A', 16, 16);
+  ctx.restore();
+}
+
+// Mute button click detection
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left);
+  const y = (e.clientY - rect.top);
+  if (x < 50 && y < 50) { toggleMute(); e.stopPropagation(); }
+}, true);
+
+canvas.addEventListener('touchstart', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const t = e.touches[0];
+  const x = (t.clientX - rect.left);
+  const y = (t.clientY - rect.top);
+  if (x < 50 && y < 50) { toggleMute(); e.stopPropagation(); }
+}, { capture: true });
+
 function drawHighScore() {
   if (highScore <= 0) return;
   ctx.save();
@@ -784,6 +831,7 @@ function draw() {
     if (gameState === 'gameover') drawGameOver();
   }
   drawHighScore();
+  drawMuteBtn();
 }
 
 function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
