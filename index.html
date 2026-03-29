@@ -302,8 +302,17 @@ function drawBackground() {
     ctx.fillRect(0, 0, W, H);
     return;
   }
-  // Just stretch the image to fill the entire screen
-  ctx.drawImage(bgImg, 0, 0, W, H);
+  // Stretch to fill height, scroll horizontally
+  const bgH = H;
+  const bgW = bgImg.width * (H / bgImg.height);
+  // If image doesn't cover width at this scale, stretch wider
+  const drawW = Math.max(bgW, W);
+  const drawH = bgH;
+
+  const x1 = -(bgScrollX % drawW);
+  ctx.drawImage(bgImg, x1, 0, drawW, drawH);
+  ctx.drawImage(bgImg, x1 + drawW, 0, drawW, drawH);
+  if (x1 > 0) ctx.drawImage(bgImg, x1 - drawW, 0, drawW, drawH);
 }
 
 function drawSky_UNUSED() {
