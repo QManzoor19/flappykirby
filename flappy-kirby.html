@@ -564,13 +564,13 @@ function drawHighScore() {
   ctx.save();
   ctx.globalAlpha = 0.7;
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = '800 16px "Nunito", "Helvetica Neue", -apple-system, sans-serif';
+  ctx.font = '900 28px "Nunito", "Helvetica Neue", -apple-system, sans-serif';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'top';
-  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-  ctx.lineWidth = 1.5;
-  ctx.strokeText(`\u2605 ${highScore}`, W - 16, 16);
-  ctx.fillText(`\u2605 ${highScore}`, W - 16, 16);
+  ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+  ctx.lineWidth = 2;
+  ctx.strokeText(`\u2605 ${highScore}`, W - 18, 18);
+  ctx.fillText(`\u2605 ${highScore}`, W - 18, 18);
   ctx.restore();
 }
 
