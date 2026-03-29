@@ -31,12 +31,11 @@
     top: 0; left: 0;
   }
   canvas {
-    border-radius: 12px;
-    box-shadow: 0 0 40px rgba(255, 105, 180, 0.3);
     cursor: pointer;
-    max-width: 100vw;
-    max-height: 100vh;
-    max-height: 100dvh;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    display: block;
   }
 </style>
 </head>
@@ -48,26 +47,27 @@ const ctx = canvas.getContext('2d');
 
 // Responsive sizing for iPhone / mobile
 function resizeCanvas() {
-  const maxW = 400, maxH = 700;
+  const dpr = window.devicePixelRatio || 1;
   const winW = window.innerWidth, winH = window.innerHeight;
-  const ratio = maxW / maxH;
-  let w, h;
-  if (winW / winH < ratio) {
-    w = Math.min(winW, maxW);
-    h = w / ratio;
-  } else {
-    h = Math.min(winH, maxH);
-    w = h * ratio;
-  }
-  canvas.width = maxW;
-  canvas.height = maxH;
-  canvas.style.width = Math.floor(w) + 'px';
-  canvas.style.height = Math.floor(h) + 'px';
+  canvas.width = winW * dpr;
+  canvas.height = winH * dpr;
+  canvas.style.width = winW + 'px';
+  canvas.style.height = winH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
+let W = window.innerWidth, H = window.innerHeight;
 resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize', () => {
+  W = window.innerWidth; H = window.innerHeight;
+  groundY = H - 60;
+  resizeCanvas();
+});
 
-const W = canvas.width, H = canvas.height;
+// Load background image
+const bgImg = new Image();
+bgImg.src = 'bg.png';
+let bgReady = false;
+bgImg.onload = () => { bgReady = true; };
 
 // Load Kirby sprite sheet
 const spriteSheet = new Image();
@@ -116,59 +116,10 @@ const pipeInterval = 90;
 let particles = [];
 
 // Ground
-const groundY = H - 60;
+let groundY = H - 60;
 
-// Clouds
-let clouds = [];
-for (let i = 0; i < 8; i++) {
-  clouds.push({
-    x: Math.random() * W * 1.5 - 50, y: Math.random() * 170 + 15,
-    size: Math.random() * 45 + 30, speed: Math.random() * 0.25 + 0.1,
-    puffs: Math.floor(Math.random() * 3) + 5, pinkTint: Math.random() * 0.35
-  });
-}
-
-// Sparkles
-let sparkles = [];
-for (let i = 0; i < 30; i++) {
-  sparkles.push({ x: Math.random() * W, y: Math.random() * 420, size: Math.random() * 2.5 + 0.5,
-    twinkleSpeed: Math.random() * 0.06 + 0.02, phase: Math.random() * Math.PI * 2 });
-}
-
-// Flowers
-let flowers = [];
-for (let i = 0; i < 22; i++) {
-  flowers.push({
-    x: Math.random() * (W + 100), size: Math.random() * 5 + 3,
-    color: ['#FF85B3','#FFD54F','#FF7070','#B39DDB','#64B5F6','#F48FB1','#FFB74D','#FF8A65','#CE93D8','#80CBC4'][Math.floor(Math.random()*10)],
-    petals: Math.floor(Math.random() * 2) + 4, swayPhase: Math.random() * Math.PI * 2, stemH: Math.random() * 8 + 6
-  });
-}
-
-// Cheering star characters - bigger, with arms and animations
-let cheerStars = [];
-for (let i = 0; i < 5; i++) {
-  cheerStars.push({
-    x: Math.random() * W,
-    y: Math.random() * 280 + 80,
-    size: Math.random() * 10 + 10,
-    speed: Math.random() * 0.3 + 0.12,
-    bobPhase: Math.random() * Math.PI * 2,
-    color: ['#FFE082','#F8BBD0','#B3E5FC','#C8E6C9','#FFD180'][i],
-    cheerPhase: Math.random() * Math.PI * 2,
-    expression: Math.floor(Math.random() * 3) // 0=happy, 1=excited, 2=wink
-  });
-}
-
-// Floating BG stars (smaller, no face)
-let bgStars = [];
-for (let i = 0; i < 4; i++) {
-  bgStars.push({
-    x: Math.random() * W, y: Math.random() * 350 + 50,
-    size: Math.random() * 5 + 3, speed: Math.random() * 0.3 + 0.1,
-    bobPhase: Math.random() * Math.PI * 2, color: Math.random() > 0.5 ? '#FFE082' : '#F8BBD0'
-  });
-}
+// Background scroll
+let bgScrollX = 0;
 
 const PIPE_COLOR = '#FFD700';
 
@@ -206,10 +157,31 @@ function spawnPipe() {
 }
 
 // ========================
-// BACKGROUND
+// BACKGROUND - scrolling image
 // ========================
 
-function drawSky() {
+function drawBackground() {
+  if (!bgReady) {
+    ctx.fillStyle = '#A0D8F0';
+    ctx.fillRect(0, 0, W, H);
+    return;
+  }
+  // Draw bg image scaled to fill canvas height, scrolling horizontally
+  const scale = H / bgImg.height;
+  const bgW = bgImg.width * scale;
+
+  // Tile horizontally for seamless scroll
+  const x1 = -(bgScrollX % bgW);
+  ctx.drawImage(bgImg, x1, 0, bgW, H);
+  if (x1 + bgW < W) {
+    ctx.drawImage(bgImg, x1 + bgW, 0, bgW, H);
+  }
+  if (x1 > 0) {
+    ctx.drawImage(bgImg, x1 - bgW, 0, bgW, H);
+  }
+}
+
+function drawSky_UNUSED() {
   const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, '#8CC8E8'); g.addColorStop(0.12, '#A0D8F0');
   g.addColorStop(0.3, '#BDE8FA'); g.addColorStop(0.5, '#D8F0FF');
@@ -664,7 +636,7 @@ function drawParticles() {
 // ========================
 
 function drawMenu() {
-  drawSky(); drawClouds(); drawBgStars(); drawCheerStars(); drawGround();
+  drawBackground();
 
   kirby.y = 280 + Math.sin(frameCount * 0.04) * 20;
   kirby.velocity = -1; kirby.flapTimer = 0;
@@ -758,18 +730,8 @@ function drawGameOver() {
 function update() {
   frameCount++;
 
-  clouds.forEach(c => {
-    c.x -= c.speed;
-    if (c.x + c.size * 1.5 < -60) { c.x = W + c.size + 60; c.y = Math.random() * 170 + 15; c.pinkTint = Math.random() * 0.35; }
-  });
-  bgStars.forEach(s => {
-    s.x -= s.speed;
-    if (s.x + s.size < -20) { s.x = W + 20 + Math.random() * 40; s.y = Math.random() * 350 + 50; }
-  });
-  cheerStars.forEach(s => {
-    s.x -= s.speed;
-    if (s.x + s.size < -30) { s.x = W + 30 + Math.random() * 60; s.y = Math.random() * 280 + 80; }
-  });
+  // Scroll background
+  bgScrollX += 0.5;
 
   if (gameState !== 'playing') return;
 
@@ -816,9 +778,9 @@ function draw() {
   ctx.clearRect(0, 0, W, H);
   if (gameState === 'menu') { drawMenu(); }
   else {
-    drawSky(); drawClouds(); drawBgStars(); drawCheerStars();
+    drawBackground();
     pipes.forEach(drawPipe);
-    drawGround(); drawParticles(); drawKirby(); drawScore();
+    drawParticles(); drawKirby(); drawScore();
     if (gameState === 'gameover') drawGameOver();
   }
 }
