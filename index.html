@@ -168,21 +168,22 @@ bgImg.src = 'bg.png';
 let bgReady = false;
 bgImg.onload = () => { bgReady = true; };
 
-// Load Kirby sprite sheet
+// Load Kirby sprite sheet (3x HD)
 const spriteSheet = new Image();
-spriteSheet.src = 'kirby-sheet.png';
+spriteSheet.src = 'kirby-sheet-hd.png';
 let spriteReady = false;
 spriteSheet.onload = () => { spriteReady = true; };
 
-// Sprite frames
+// Sprite frames (coordinates x3 for HD sheet)
+const S = 3;
 const SPRITES = {
-  idle:    { sx: 42, sy: 0,   sw: 46, sh: 40 },
-  walk1:   { sx: 4,   sy: 84,  sw: 44, sh: 42 },
-  walk3:   { sx: 187, sy: 84,  sw: 41, sh: 38 },
-  walk5:   { sx: 308, sy: 84,  sw: 44, sh: 42 },
-  walk6:   { sx: 367, sy: 85,  sw: 44, sh: 36 },
-  jump1:   { sx: 11,  sy: 353, sw: 45, sh: 46 },
-  jump2:   { sx: 74,  sy: 354, sw: 48, sh: 46 },
+  idle:    { sx: 42*S, sy: 0,     sw: 46*S, sh: 40*S },
+  walk1:   { sx: 4*S,  sy: 84*S,  sw: 44*S, sh: 42*S },
+  walk3:   { sx: 187*S,sy: 84*S,  sw: 41*S, sh: 38*S },
+  walk5:   { sx: 308*S,sy: 84*S,  sw: 44*S, sh: 42*S },
+  walk6:   { sx: 367*S,sy: 85*S,  sw: 44*S, sh: 36*S },
+  jump1:   { sx: 11*S, sy: 353*S, sw: 45*S, sh: 46*S },
+  jump2:   { sx: 74*S, sy: 354*S, sw: 48*S, sh: 46*S },
 };
 
 const FLAP_FRAMES = [SPRITES.jump1, SPRITES.jump2];
