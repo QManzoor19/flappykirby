@@ -301,18 +301,21 @@ function drawBackground() {
     ctx.fillRect(0, 0, W, H);
     return;
   }
-  // Scale to fully cover screen - no gaps
-  const bgH = H;
-  const bgW = bgImg.width * (H / bgImg.height);
+  // Scale to cover full screen - use the larger scale so no gaps anywhere
+  const scaleW = W / bgImg.width;
+  const scaleH = H / bgImg.height;
+  const scale = Math.max(scaleW, scaleH);
+  const bgW = bgImg.width * scale;
+  const bgH = bgImg.height * scale;
+  const yOff = H - bgH; // pin bottom of image to bottom of screen
 
   // Tile horizontally for seamless scroll
   const x1 = -(bgScrollX % bgW);
-  // Draw enough tiles to cover full width
   for (let x = x1; x < W; x += bgW) {
-    ctx.drawImage(bgImg, x, 0, bgW, bgH);
+    ctx.drawImage(bgImg, x, yOff, bgW, bgH);
   }
   if (x1 > 0) {
-    ctx.drawImage(bgImg, x1 - bgW, 0, bgW, bgH);
+    ctx.drawImage(bgImg, x1 - bgW, yOff, bgW, bgH);
   }
 }
 
